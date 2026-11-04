@@ -325,7 +325,11 @@
           jogo.obraIniciada(d.estado);
           avisar("🪓 " + d.jogador + " começou uma serraria (-" + d.estado.custo + " toras, 1 lenhador ocupado).");
         });
-        // ETAPA 4: ouvir "operacao.recusada"     -> jogo.recusado(...)
+        // só esta aba recebe, pois foi ela que pediu; o estado não muda, então não chama atualizar
+        ouvir("operacao.recusada", "mostra o motivo da recusa em vermelho e balança a vila", (d) => {
+          jogo.recusado(d.motivo);
+          avisar("✋ Pedido recusado: " + d.motivo, "erro");
+        });
         // ETAPA 5: ouvir "recurso.produzido"     -> jogo.recursoProduzido(...)
         //          e "construcao.concluida"      -> jogo.obraConcluida(...)
         // ETAPA 6: ouvir "vila.encerrada"        -> jogo.vilaEncerrada()

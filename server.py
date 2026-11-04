@@ -32,6 +32,11 @@ def fato(causa, **extras):
     return {"estado": dict(estado), "causa": causa, **extras}
 
 
+async def recusar(sid, motivo, causa):
+    # só quem pediu recebe: os outros não precisam saber da recusa e o estado não mudou
+    await sio.emit("operacao.recusada", {"motivo": motivo, "causa": causa}, to=sid)
+
+
 @sio.event
 async def connect(sid, environ, auth=None):
     auth = auth or {}
@@ -49,9 +54,9 @@ async def disconnect(sid, dados=None):
 @sio.on("vila.abertura_solicitada")
 async def abertura_solicitada(sid, dados=None):
     if jogadores[sid]["papel"] != "mestre":
-        return
+        return await recusar(sid, "Só o Mestre pode abrir a temporada", "vila.abertura_solicitada")
     if estado["fase"] != "aguardando":
-        return
+        return await recusar(sid, "A temporada já foi aberta", "vila.abertura_solicitada")
     estado["fase"] = "aberta"
     # todos recebem: a temporada aberta vale para a vila inteira
     await sio.emit("vila.iniciada", fato("vila.abertura_solicitada"))
@@ -60,6 +65,14 @@ async def abertura_solicitada(sid, dados=None):
 # o Jogador só pede; o servidor decide e altera o estado
 @sio.on("construcao.solicitada")
 async def construcao_solicitada(sid, dados=None):
+    # validar e alterar sem nenhum await no meio: assim dois pedidos simultâneos
+    # não conseguem os mesmos lenhadores/toras (só um passa)
+    if estado["fase"] != "aberta":
+        return await recusar(sid, "A temporada não está aberta", "construcao.solicitada")
+    if estado["toras"] < CUSTO:
+        return await recusar(sid, "Toras insuficientes", "construcao.solicitada")
+    if estado["trabalhadores"] >= estado["limite"]:
+        return await recusar(sid, "Sem lenhador livre", "construcao.solicitada")
     estado["toras"] -= CUSTO
     estado["trabalhadores"] += 1
     estado["em_obra"] += 1
