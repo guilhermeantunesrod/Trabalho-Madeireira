@@ -342,7 +342,12 @@
           jogo.obraConcluida(d.estado);
           avisar("🪚 Serraria pronta! 1 lenhador livre e a produção subiu para " + d.estado.producao + " toras.", "ok");
         });
-        // ETAPA 6: ouvir "vila.encerrada"        -> jogo.vilaEncerrada()
+        // todas as abas precisam saber que a temporada acabou e que novos pedidos serão recusados
+        ouvir("vila.encerrada", "marca a temporada como encerrada e escurece a vila", (d) => {
+          atualizar(d);
+          jogo.vilaEncerrada();
+          avisar("🌙 Temporada encerrada. A produção de toras parou.", "ok");
+        });
       }
 
       // ===== PEDIDOS (emit): o cliente PEDE algo ao servidor =====
@@ -356,7 +361,8 @@
         pedir("construcao.solicitada");
       }
       function encerrarVila() {
-        // ETAPA 6: pedir "vila.encerramento_solicitado"
+        // o Mestre só pede: quem encerra de fato é o servidor, que avisa todos com vila.encerrada
+        pedir("vila.encerramento_solicitado");
       }
 
       return { nome, papel, conectado, estado, avisos, eventosVisiveis, contadores, ocultarProducao, porMinuto,

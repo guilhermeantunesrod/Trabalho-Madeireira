@@ -86,6 +86,18 @@ async def construcao_solicitada(sid, dados=None):
     sio.start_background_task(concluir_obra)
 
 
+# o Mestre pede para encerrar; o servidor valida e decide
+@sio.on("vila.encerramento_solicitado")
+async def encerramento_solicitado(sid, dados=None):
+    if jogadores[sid]["papel"] != "mestre":
+        return await recusar(sid, "Só o Mestre pode encerrar a temporada", "vila.encerramento_solicitado")
+    if estado["fase"] != "aberta":
+        return await recusar(sid, "A temporada não está aberta", "vila.encerramento_solicitado")
+    estado["fase"] = "encerrada"
+    # todos recebem: com a temporada encerrada a produção para e ninguém mais constrói
+    await sio.emit("vila.encerrada", fato("vila.encerramento_solicitado"))
+
+
 # temporizador: a vila produz sozinha a cada INTERVALO, sem ninguém pedir
 async def produzir():
     while estado["fase"] == "aberta":
