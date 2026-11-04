@@ -55,3 +55,13 @@ async def abertura_solicitada(sid, dados=None):
     estado["fase"] = "aberta"
     # todos recebem: a temporada aberta vale para a vila inteira
     await sio.emit("vila.iniciada", fato("vila.abertura_solicitada"))
+
+
+# o Jogador só pede; o servidor decide e altera o estado
+@sio.on("construcao.solicitada")
+async def construcao_solicitada(sid, dados=None):
+    estado["toras"] -= CUSTO
+    estado["trabalhadores"] += 1
+    estado["em_obra"] += 1
+    # todos recebem: as toras gastas e o lenhador ocupado mudam a vila de todo mundo
+    await sio.emit("construcao.iniciada", fato("construcao.solicitada", jogador=jogadores[sid]["nome"]))

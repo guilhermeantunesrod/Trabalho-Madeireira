@@ -69,7 +69,7 @@
         <button @click="abrirVila">Abrir temporada</button>
         <button @click="encerrarVila">Encerrar temporada</button>
       </template>
-      <button v-else @click="construir">🔨 Construir (custo {{ estado.custo }} toras)</button>
+      <button v-else @click="construir">🪚 Construir serraria (custo {{ estado.custo }} toras)</button>
     </section>
 
     <ul class="avisos">
@@ -319,7 +319,12 @@
           jogo.vilaIniciada();
           avisar("☀️ Temporada aberta! Os lenhadores já podem trabalhar.", "ok");
         });
-        // ETAPA 3: ouvir "construcao.iniciada"   -> jogo.obraIniciada(...)
+        // todas as abas precisam ver a serraria nova e as toras gastas, não só quem pediu
+        ouvir("construcao.iniciada", "desconta as toras, ocupa um lenhador e desenha o canteiro da serraria", (d) => {
+          atualizar(d);
+          jogo.obraIniciada(d.estado);
+          avisar("🪓 " + d.jogador + " começou uma serraria (-" + d.estado.custo + " toras, 1 lenhador ocupado).");
+        });
         // ETAPA 4: ouvir "operacao.recusada"     -> jogo.recusado(...)
         // ETAPA 5: ouvir "recurso.produzido"     -> jogo.recursoProduzido(...)
         //          e "construcao.concluida"      -> jogo.obraConcluida(...)
@@ -333,7 +338,8 @@
         pedir("vila.abertura_solicitada");
       }
       function construir() {
-        // ETAPA 3: pedir "construcao.solicitada"
+        // o Jogador só pede: o servidor valida e, se der, avisa todos com construcao.iniciada
+        pedir("construcao.solicitada");
       }
       function encerrarVila() {
         // ETAPA 6: pedir "vila.encerramento_solicitado"
