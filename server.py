@@ -41,6 +41,7 @@ async def recusar(sid, motivo, causa):
     await sio.emit("operacao.recusada", {"motivo": motivo, "causa": causa}, to=sid)
 
 
+# cada entrada é um evento: o servidor guarda nome e papel para validar os pedidos desse jogador
 @sio.event
 async def connect(sid, environ, auth=None):
     auth = auth or {}
@@ -49,6 +50,7 @@ async def connect(sid, environ, auth=None):
     await sio.emit("estado.sincronizado", fato("conexao"), to=sid)
 
 
+# quem saiu não faz mais pedidos, então deixa de constar entre os jogadores
 @sio.event
 async def disconnect(sid, dados=None):
     jogadores.pop(sid, None)
