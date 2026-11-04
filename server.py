@@ -15,6 +15,7 @@ INTERVALO = 4       # segundos entre cada produção de toras
 estado = {
     "fase": "aguardando",
     "toras": 120,
+    "tabuas": 0,
     "trabalhadores": 0,     # lenhadores ocupados
     "limite": 3,            # total de lenhadores
     "producao": 12,         # toras por intervalo
@@ -26,6 +27,9 @@ estado = {
 }
 
 jogadores = {}      # sid -> {"nome": ..., "papel": ...}
+
+GANHO_POR_SERRARIA = 4      # toras a mais por intervalo a cada serraria pronta
+TABUAS_POR_SERRARIA = 2     # tábuas por serraria pronta a cada produção
 
 
 def fato(causa, **extras):
@@ -60,6 +64,7 @@ async def abertura_solicitada(sid, dados=None):
     estado["fase"] = "aberta"
     # todos recebem: a temporada aberta vale para a vila inteira
     await sio.emit("vila.iniciada", fato("vila.abertura_solicitada"))
+    sio.start_background_task(produzir)
 
 
 # o Jogador só pede; o servidor decide e altera o estado
@@ -78,3 +83,29 @@ async def construcao_solicitada(sid, dados=None):
     estado["em_obra"] += 1
     # todos recebem: as toras gastas e o lenhador ocupado mudam a vila de todo mundo
     await sio.emit("construcao.iniciada", fato("construcao.solicitada", jogador=jogadores[sid]["nome"]))
+    sio.start_background_task(concluir_obra)
+
+
+# temporizador: a vila produz sozinha a cada INTERVALO, sem ninguém pedir
+async def produzir():
+    while estado["fase"] == "aberta":
+        await sio.sleep(INTERVALO)
+        if estado["fase"] != "aberta":
+            break
+        estado["toras"] += estado["producao"]
+        estado["tabuas"] += TABUAS_POR_SERRARIA * estado["concluidas"]
+        # todos recebem: o estoque é da vila inteira; a causa é o tempo, não um pedido
+        await sio.emit("recurso.produzido", fato("temporizador"))
+
+
+# temporizador: a serraria fica pronta sozinha TEMPO_OBRA segundos depois de iniciada
+async def concluir_obra():
+    await sio.sleep(TEMPO_OBRA)
+    if estado["fase"] != "aberta":
+        return
+    estado["trabalhadores"] -= 1
+    estado["em_obra"] -= 1
+    estado["concluidas"] += 1
+    estado["producao"] += GANHO_POR_SERRARIA
+    # todos recebem: o lenhador livre e a produção maior valem para todo mundo
+    await sio.emit("construcao.concluida", fato("construcao.iniciada (temporizador)"))

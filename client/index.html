@@ -59,6 +59,7 @@
 
     <section class="painel">
       <p>🪵 Toras: <strong>{{ estado.toras }}</strong> (+{{ porMinuto }}/min)</p>
+      <p>🪚 Tábuas: <strong>{{ estado.tabuas }}</strong></p>
       <p>🪓 Lenhadores: {{ estado.trabalhadores }}/{{ estado.limite }}
         <progress :value="estado.trabalhadores" :max="estado.limite"></progress></p>
       <p>🪚 Serrarias: {{ estado.concluidas }} prontas, {{ estado.em_obra }} em obra</p>
@@ -202,7 +203,7 @@
         if (!obra) return;
         obra.canteiro.destroy(); obra.fundo.destroy(); obra.barra.destroy();
         this.criarCasa(obra.x, obra.y);
-        this.flutuar("🏠 Obra concluída!", obra.x, obra.y - 18, "#1b5e20");
+        this.flutuar("🪚 Serraria pronta!", obra.x, obra.y - 18, "#1b5e20");
       }
       recursoProduzido(estado) {              // recurso.produzido
         this.flutuar("+" + estado.producao + " 🪵", this.acampamento.x, this.acampamento.y, "#1b5e20");
@@ -248,7 +249,7 @@
       const papel = ref("");
       const conectado = ref(false);
       const estado = reactive({
-        fase: "aguardando", toras: 0, trabalhadores: 0, limite: 0,
+        fase: "aguardando", toras: 0, tabuas: 0, trabalhadores: 0, limite: 0,
         producao: 0, intervalo: 0, tempo_obra: 0, custo: 0, concluidas: 0, em_obra: 0,
       });
       const avisos = ref([]);
@@ -277,7 +278,7 @@
         if (!d) return "";
         const { estado: e, causa, ...resto } = d;
         const partes = Object.entries(resto).map(([k, v]) => k + ": " + v);
-        if (e) partes.push("toras " + e.toras + ", lenhadores " + e.trabalhadores + "/" + e.limite);
+        if (e) partes.push("toras " + e.toras + ", tábuas " + e.tabuas + ", lenhadores " + e.trabalhadores + "/" + e.limite);
         return partes.join(" · ");
       }
       function registrar(sentido, nome, dados, reacao = "") {
@@ -330,8 +331,17 @@
           jogo.recusado(d.motivo);
           avisar("✋ Pedido recusado: " + d.motivo, "erro");
         });
-        // ETAPA 5: ouvir "recurso.produzido"     -> jogo.recursoProduzido(...)
-        //          e "construcao.concluida"      -> jogo.obraConcluida(...)
+        // chega sozinho a cada intervalo (temporizador do servidor): o estoque de todos precisa acompanhar
+        ouvir("recurso.produzido", "soma as toras e tábuas produzidas e mostra o +toras no acampamento", (d) => {
+          atualizar(d);
+          jogo.recursoProduzido(d.estado);
+        });
+        // a obra termina sozinha no servidor; todas as abas precisam ver a serraria pronta e o lenhador livre
+        ouvir("construcao.concluida", "libera o lenhador, troca o canteiro pela serraria pronta e aumenta a produção", (d) => {
+          atualizar(d);
+          jogo.obraConcluida(d.estado);
+          avisar("🪚 Serraria pronta! 1 lenhador livre e a produção subiu para " + d.estado.producao + " toras.", "ok");
+        });
         // ETAPA 6: ouvir "vila.encerrada"        -> jogo.vilaEncerrada()
       }
 
