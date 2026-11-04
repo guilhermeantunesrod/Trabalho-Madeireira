@@ -43,3 +43,15 @@ async def connect(sid, environ, auth=None):
 @sio.event
 async def disconnect(sid, dados=None):
     jogadores.pop(sid, None)
+
+
+# o Mestre pede para abrir; o servidor é quem decide se a temporada pode começar
+@sio.on("vila.abertura_solicitada")
+async def abertura_solicitada(sid, dados=None):
+    if jogadores[sid]["papel"] != "mestre":
+        return
+    if estado["fase"] != "aguardando":
+        return
+    estado["fase"] = "aberta"
+    # todos recebem: a temporada aberta vale para a vila inteira
+    await sio.emit("vila.iniciada", fato("vila.abertura_solicitada"))

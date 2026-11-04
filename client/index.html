@@ -313,7 +313,12 @@
           atualizar(d);
           jogo.mostrarEstado(d.estado);
         });
-        // ETAPA 2: ouvir "vila.iniciada"         -> jogo.vilaIniciada()
+        // todas as abas precisam saber que a temporada abriu, não só a do Mestre que pediu
+        ouvir("vila.iniciada", "marca a temporada como aberta e acende a faixa da vila", (d) => {
+          atualizar(d);
+          jogo.vilaIniciada();
+          avisar("☀️ Temporada aberta! Os lenhadores já podem trabalhar.", "ok");
+        });
         // ETAPA 3: ouvir "construcao.iniciada"   -> jogo.obraIniciada(...)
         // ETAPA 4: ouvir "operacao.recusada"     -> jogo.recusado(...)
         // ETAPA 5: ouvir "recurso.produzido"     -> jogo.recursoProduzido(...)
@@ -324,7 +329,8 @@
       // ===== PEDIDOS (emit): o cliente PEDE algo ao servidor =====
       // pedir(evento)
       function abrirVila() {
-        // ETAPA 2: pedir "vila.abertura_solicitada"
+        // o Mestre só pede: quem abre de fato é o servidor, que avisa todos com vila.iniciada
+        pedir("vila.abertura_solicitada");
       }
       function construir() {
         // ETAPA 3: pedir "construcao.solicitada"
