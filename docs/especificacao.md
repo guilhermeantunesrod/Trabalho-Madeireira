@@ -1,6 +1,6 @@
 # Especificação — Vila em Tempo Real
 
-**Integrantes:** Guilherme Antunes Rodrigues (@usuario-github) e Samuel Frare (@usuario-github)
+**Integrantes:** Guilherme Antunes Rodrigues (@guilhermeantunesrod) e Samuel Frare (@samuelpavanello-cyber)
 **Tipo de vila (sorteio):** Madeireira
 
 ## 1. Regras da vila
