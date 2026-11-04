@@ -111,4 +111,6 @@ async def concluir_obra():
 ```
 
 ## Uso de IA
-(O que usou e o que mudou. Se não usou: "Não utilizei IA".)
+Usamos o Claude (Claude Code) durante o desenvolvimento, para ajudar a implementar os eventos no servidor e no cliente, adicionar os contadores por evento, conferir o projeto com o enunciado, realizar testes e como auxílio para escrever o README.
+
+**O que mudamos e revisamos:** definimos as regras e os números próprios da Madeireira, para o resultado não ficar igual ao exemplo do kit. Testamos o resultado no navegador com duas abas (abertura, construção, produção, fim da obra e encerramento), conferindo os números e os contadores no Painel de eventos. Também comparamos o projeto com o enunciado para ver o que ainda faltava e escolhemos o que entraria em cada commit.
